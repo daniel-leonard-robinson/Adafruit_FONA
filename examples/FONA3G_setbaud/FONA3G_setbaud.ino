@@ -38,7 +38,7 @@ SoftwareSerial *fonaSerial = &fonaSS;
 
 Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
 
-uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
+//uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
 
 void setup() {
   while (!Serial);
