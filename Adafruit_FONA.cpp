@@ -1428,9 +1428,12 @@ boolean Adafruit_FONA::TCPsendString(String packet) {
 
 	mySerial->print(F("AT+CIPSEND="));
 	mySerial->println(len);
-	readline();
+	readline(5000, true);
+//	readRaw(b);
 
 	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	DEBUG_PRINTLN(replybuffer[0]);
 
 	if (replybuffer[0] != '>') return false;
 
@@ -1546,7 +1549,39 @@ uint16_t Adafruit_FONA::TCPread(uint8_t *buff, uint8_t len) {
 	return avail;
 }
 
+uint16_t Adafruit_FONA::TCPreadString(String *buff, int len) {
+	uint16_t avail;
 
+	mySerial->print(F("AT+CIPRXGET=2,"));
+	mySerial->println(len);
+	readline();
+	if (! parseReply(F("+CIPRXGET: 2,"), &avail, ',', 0)) return false;
+
+	readRaw(avail);
+
+#ifdef ADAFRUIT_FONA_DEBUG
+	DEBUG_PRINT (avail); DEBUG_PRINTLN(F(" bytes read"));
+	DEBUG_PRINTLN();
+#endif
+
+//	memcpy(buff, replybuffer, avail);
+	String str(replybuffer);
+	*buff = "";
+	(*buff).concat(str);
+	DEBUG_PRINTLN(*buff);
+
+	return avail;
+}
+
+uint16_t Adafruit_FONA::TCPwaitReply() {
+	uint16_t reply_size = 0;
+	DEBUG_PRINTLN(F("Checking if there is a reply."));
+	reply_size = readline(3000);
+	// TODO: Check if reply
+	DEBUG_PRINT(F("Reply: "));
+	DEBUG_PRINTLN(replybuffer);
+	return reply_size;
+}
 
 /********* HTTP LOW LEVEL FUNCTIONS  ************************************/
 
@@ -1851,8 +1886,8 @@ uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {
 	uint16_t replyidx = 0;
 
 	while (timeout--) {
-		if (replyidx >= 254) {
-			//DEBUG_PRINTLN(F("SPACE"));
+		if (replyidx >= 299) {
+			DEBUG_PRINTLN(F("!!SPACE"));
 			break;
 		}
 
@@ -1869,12 +1904,13 @@ uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {
 				}
 			}
 			replybuffer[replyidx] = c;
-			//DEBUG_PRINT(c, HEX); DEBUG_PRINT("#"); DEBUG_PRINTLN(c);
+//			DEBUG_PRINT(c, HEX); DEBUG_PRINT("#"); DEBUG_PRINTLN(c);
 			replyidx++;
 		}
 
 		if (timeout == 0) {
-			//DEBUG_PRINTLN(F("TIMEOUT"));
+//			DEBUG_PRINTLN(F("TIMEOUT"));
+//			DEBUG_PRINTLN(replybuffer);
 			break;
 		}
 		delay(1);
