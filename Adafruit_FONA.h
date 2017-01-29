@@ -146,6 +146,7 @@ class Adafruit_FONA : public FONAStreamType {
   boolean TCPconnected(void);
   boolean TCPsend(char *packet, uint8_t len);
   boolean TCPsendString(String packet);
+  boolean TCPsendCharString(const char * packet);
   boolean TCPsendPackets(char packets[8][100], uint8_t packets_len);
 //  boolean TCPsend(String packet, uint8_t len);
   uint16_t TCPavailable(void);

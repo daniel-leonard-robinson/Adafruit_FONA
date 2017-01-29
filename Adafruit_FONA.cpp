@@ -1445,6 +1445,35 @@ boolean Adafruit_FONA::TCPsendString(String packet) {
 	return (strcmp(replybuffer, "SEND OK") == 0);
 }
 
+boolean Adafruit_FONA::TCPsendCharString(const char * packet) {
+
+	uint16_t len = strlen(packet);
+	DEBUG_PRINT(F("AT+CIPSEND="));
+	DEBUG_PRINTLN(len);
+#ifdef ADAFRUIT_FONA_DEBUG
+	DEBUG_PRINTLN(packet);
+#endif
+	DEBUG_PRINTLN();
+
+	mySerial->print(F("AT+CIPSEND="));
+	mySerial->println(len);
+	readline(5000, true);
+//	readRaw(b);
+
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	DEBUG_PRINTLN(replybuffer[0]);
+
+	if (replybuffer[0] != '>') return false;
+
+	mySerial->print(packet);
+	readline(3000); // wait up to 3 seconds to send the data
+
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	return (strcmp(replybuffer, "SEND OK") == 0);
+}
+
 //boolean Adafruit_FONA::TCPsendPackets(char packets[8][100], uint8_t packets_len) {
 //
 //	uint16_t len = 0;
