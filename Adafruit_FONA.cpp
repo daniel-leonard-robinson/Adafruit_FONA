@@ -38,6 +38,11 @@ uint8_t Adafruit_FONA::type(void) {
 	return _type;
 }
 
+boolean Adafruit_FONA::beginEmpty(Stream &port) {
+	mySerial = &port;
+	return true;
+}
+
 boolean Adafruit_FONA::begin(Stream &port) {
 	mySerial = &port;
 
@@ -1965,6 +1970,38 @@ uint8_t Adafruit_FONA::getReply(char *send, uint16_t timeout) {
 }
 
 uint8_t Adafruit_FONA::getReply(FONAFlashStringPtr send, uint16_t timeout) {
+	flushInput();
+
+
+	DEBUG_PRINT(F("\t---> ")); DEBUG_PRINTLN(send);
+
+
+	mySerial->println(send);
+
+	uint8_t l = readline(timeout);
+
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	return l;
+}
+
+uint8_t Adafruit_FONA::getReplyDebug(const char *send, uint16_t timeout) {
+	flushInput();
+
+
+	DEBUG_PRINT(F("\t---> ")); DEBUG_PRINTLN(send);
+
+
+	mySerial->println(send);
+
+	uint8_t l = readline(timeout);
+
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	return l;
+}
+
+uint8_t Adafruit_FONA::getReplyDebug(FONAFlashStringPtr send, uint16_t timeout) {
 	flushInput();
 
 

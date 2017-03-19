@@ -65,6 +65,7 @@
 class Adafruit_FONA : public FONAStreamType {
  public:
   Adafruit_FONA(int8_t r);
+  boolean beginEmpty(FONAStreamType &port);
   boolean begin(FONAStreamType &port);
   uint8_t type();
 
@@ -193,6 +194,9 @@ class Adafruit_FONA : public FONAStreamType {
   boolean sendCheckReply(char *send, char *reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(FONAFlashStringPtr send, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(char* send, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+
+  uint8_t getReplyDebug(const char *send, uint16_t timeout);
+  uint8_t getReplyDebug(FONAFlashStringPtr send, uint16_t timeout);
 
 
  protected:
