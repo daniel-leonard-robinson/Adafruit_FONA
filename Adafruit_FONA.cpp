@@ -14,7 +14,7 @@
   Written by Limor Fried/Ladyada for Adafruit Industries.
   BSD license, all text above must be included in any redistribution
  ****************************************************/
-    // next line per http://postwarrior.com/arduino-ethershield-error-prog_char-does-not-name-a-type/
+// next line per http://postwarrior.com/arduino-ethershield-error-prog_char-does-not-name-a-type/
 
 #include "Adafruit_FONA.h"
 
@@ -25,7 +25,8 @@ Adafruit_FONA::Adafruit_FONA(int8_t rst)
 {
 	_rstpin = rst;
 
-	apn = F("internet");
+//	apn = F("internet");
+	apn = F("wap");
 	apnusername = 0;
 	apnpassword = 0;
 	mySerial = 0;
@@ -1151,16 +1152,23 @@ boolean Adafruit_FONA::enableGPRS(boolean onoff) {
 			return false;
 
 		// set bearer profile access point name
-		if (apn) {
+		if (apn || apn_alt) {
 			// Send command AT+SAPBR=3,1,"APN","<apn value>" where <apn value> is the configured APN value.
-			if (! sendCheckReplyQuoted(F("AT+SAPBR=3,1,\"APN\","), apn, ok_reply, 10000))
-				return false;
+			if (apn_alt) {
+				if (! sendCheckReplyQuoted("AT+SAPBR=3,1,\"APN\",", apn_alt, "OK", 10000))
+					return false;
+			}
+			else if (apn) {
+				if (! sendCheckReplyQuoted(F("AT+SAPBR=3,1,\"APN\","), apn, ok_reply, 10000))
+					return false;
+			}
 
 			// send AT+CSTT,"apn","user","pass"
 			flushInput();
 
 			mySerial->print(F("AT+CSTT=\""));
-			mySerial->print(apn);
+			if (apn_alt) mySerial->print(apn_alt);
+			else if (apn) mySerial->print(apn);
 			if (apnusername) {
 				mySerial->print("\",\"");
 				mySerial->print(apnusername);
@@ -1172,7 +1180,8 @@ boolean Adafruit_FONA::enableGPRS(boolean onoff) {
 			mySerial->println("\"");
 
 			DEBUG_PRINT(F("\t---> ")); DEBUG_PRINT(F("AT+CSTT=\""));
-			DEBUG_PRINT(apn);
+			if (apn_alt) DEBUG_PRINT(apn_alt);
+			else if (apn) DEBUG_PRINT(apn);
 
 			if (apnusername) {
 				DEBUG_PRINT("\",\"");
@@ -1295,6 +1304,13 @@ uint8_t Adafruit_FONA::GPRSstate(void) {
 void Adafruit_FONA::setGPRSNetworkSettings(FONAFlashStringPtr apn,
 		FONAFlashStringPtr username, FONAFlashStringPtr password) {
 	this->apn = apn;
+	this->apnusername = username;
+	this->apnpassword = password;
+}
+
+void Adafruit_FONA::setGPRSNetworkSettings(const char * apn,
+		FONAFlashStringPtr username, FONAFlashStringPtr password) {
+	strcpy(this->apn_alt, apn);
 	this->apnusername = username;
 	this->apnpassword = password;
 }
@@ -1434,7 +1450,7 @@ boolean Adafruit_FONA::TCPsendString(String packet) {
 	mySerial->print(F("AT+CIPSEND="));
 	mySerial->println(len);
 	readline(5000, true);
-//	readRaw(b);
+	//	readRaw(b);
 
 	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
 
@@ -1463,7 +1479,7 @@ boolean Adafruit_FONA::TCPsendCharString(const char * packet) {
 	mySerial->print(F("AT+CIPSEND="));
 	mySerial->println(len);
 	readline(5000, true);
-//	readRaw(b);
+	//	readRaw(b);
 
 	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
 
@@ -1598,7 +1614,7 @@ uint16_t Adafruit_FONA::TCPreadString(String *buff, int len) {
 	DEBUG_PRINTLN();
 #endif
 
-//	memcpy(buff, replybuffer, avail);
+	//	memcpy(buff, replybuffer, avail);
 	String str(replybuffer);
 	*buff = "";
 	(*buff).concat(str);
@@ -1938,13 +1954,13 @@ uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {
 				}
 			}
 			replybuffer[replyidx] = c;
-//			DEBUG_PRINT(c, HEX); DEBUG_PRINT("#"); DEBUG_PRINTLN(c);
+			//			DEBUG_PRINT(c, HEX); DEBUG_PRINT("#"); DEBUG_PRINTLN(c);
 			replyidx++;
 		}
 
 		if (timeout == 0) {
-//			DEBUG_PRINTLN(F("TIMEOUT"));
-//			DEBUG_PRINTLN(replybuffer);
+			//			DEBUG_PRINTLN(F("TIMEOUT"));
+			//			DEBUG_PRINTLN(replybuffer);
 			break;
 		}
 		delay(1);
@@ -2095,6 +2111,27 @@ uint8_t Adafruit_FONA::getReplyQuoted(FONAFlashStringPtr prefix, FONAFlashString
 	return l;
 }
 
+// Send prefix, ", suffix, ", and newline. Return response (and also set replybuffer with response).
+uint8_t Adafruit_FONA::getReplyQuoted(const char * prefix, const char * suffix, uint16_t timeout) {
+	flushInput();
+
+
+	DEBUG_PRINT(F("\t---> ")); DEBUG_PRINT(prefix);
+	DEBUG_PRINT('"'); DEBUG_PRINT(suffix); DEBUG_PRINTLN('"');
+
+
+	mySerial->print(prefix);
+	mySerial->print('"');
+	mySerial->print(suffix);
+	mySerial->println('"');
+
+	uint8_t l = readline(timeout);
+
+	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+
+	return l;
+}
+
 boolean Adafruit_FONA::sendCheckReply(char *send, char *reply, uint16_t timeout) {
 	if (! getReply(send, timeout) )
 		return false;
@@ -2147,6 +2184,12 @@ boolean Adafruit_FONA::sendCheckReply(FONAFlashStringPtr prefix, int32_t suffix1
 boolean Adafruit_FONA::sendCheckReplyQuoted(FONAFlashStringPtr prefix, FONAFlashStringPtr suffix, FONAFlashStringPtr reply, uint16_t timeout) {
 	getReplyQuoted(prefix, suffix, timeout);
 	return (prog_char_strcmp(replybuffer, (prog_char*)reply) == 0);
+}
+
+// Send prefix, ", suffix, ", and newline.  Verify response matches reply parameter.
+boolean Adafruit_FONA::sendCheckReplyQuoted(const char * prefix, const char * suffix, const char * reply, uint16_t timeout) {
+	getReplyQuoted(prefix, suffix, timeout);
+	return (strcmp(replybuffer, reply) == 0);
 }
 
 
