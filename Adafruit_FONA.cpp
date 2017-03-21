@@ -1973,14 +1973,16 @@ uint8_t Adafruit_FONA::getReply(char *send, uint16_t timeout) {
 	flushInput();
 
 
-	DEBUG_PRINT(F("\t---> ")); DEBUG_PRINTLN(send);
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINT(F("\t---> "));
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINTLN(send);
 
 
 	mySerial->println(send);
 
 	uint8_t l = readline(timeout);
 
-	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINT (F("\t<--- "));
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINTLN(replybuffer);
 
 	return l;
 }
@@ -1989,14 +1991,16 @@ uint8_t Adafruit_FONA::getReply(FONAFlashStringPtr send, uint16_t timeout) {
 	flushInput();
 
 
-	DEBUG_PRINT(F("\t---> ")); DEBUG_PRINTLN(send);
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINT(F("\t---> "));
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINTLN(send);
 
 
 	mySerial->println(send);
 
 	uint8_t l = readline(timeout);
 
-	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINT (F("\t<--- "));
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINTLN(replybuffer);
 
 	return l;
 }
