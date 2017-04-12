@@ -25,7 +25,7 @@ Adafruit_FONA::Adafruit_FONA(int8_t rst)
 {
 	_rstpin = rst;
 
-//	apn = F("internet");
+	//	apn = F("internet");
 	apn = F("wap");
 	apnusername = 0;
 	apnpassword = 0;
@@ -33,6 +33,7 @@ Adafruit_FONA::Adafruit_FONA(int8_t rst)
 	httpsredirect = false;
 	useragent = F("FONA");
 	ok_reply = F("OK");
+	_type = 0;
 }
 
 uint8_t Adafruit_FONA::type(void) {
@@ -1155,10 +1156,14 @@ boolean Adafruit_FONA::enableGPRS(boolean onoff) {
 		if (apn || apn_alt) {
 			// Send command AT+SAPBR=3,1,"APN","<apn value>" where <apn value> is the configured APN value.
 			if (apn_alt) {
+				DEBUG_PRINT(F("TCP: apn_alt -> "));
+				DEBUG_PRINTLN(apn_alt);
 				if (! sendCheckReplyQuoted("AT+SAPBR=3,1,\"APN\",", apn_alt, "OK", 10000))
 					return false;
 			}
 			else if (apn) {
+				DEBUG_PRINT(F("TCP: apn_alt -> "));
+				DEBUG_PRINTLN(apn);
 				if (! sendCheckReplyQuoted(F("AT+SAPBR=3,1,\"APN\","), apn, ok_reply, 10000))
 					return false;
 			}
@@ -1437,37 +1442,37 @@ boolean Adafruit_FONA::TCPsend(char *packet, uint8_t len) {
 	return (strcmp(replybuffer, "SEND OK") == 0);
 }
 
-boolean Adafruit_FONA::TCPsendString(String packet) {
-
-	uint16_t len = packet.length();
-	DEBUG_PRINT(F("AT+CIPSEND="));
-	DEBUG_PRINTLN(len);
-#ifdef ADAFRUIT_FONA_DEBUG
-	DEBUG_PRINTLN(packet);
-#endif
-	DEBUG_PRINTLN();
-
-	mySerial->print(F("AT+CIPSEND="));
-	mySerial->println(len);
-	readline(5000, true);
-	//	readRaw(b);
-
-	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
-
-	DEBUG_PRINTLN(replybuffer[0]);
-
-	if (replybuffer[0] != '>') return false;
-
-	mySerial->print(packet);
-	readline(3000); // wait up to 3 seconds to send the data
-
-	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
-
-	return (strcmp(replybuffer, "SEND OK") == 0);
-}
+//boolean Adafruit_FONA::TCPsendString(String packet) {
+//
+//	uint16_t len = packet.length();
+//	DEBUG_PRINT(F("AT+CIPSEND="));
+//	DEBUG_PRINTLN(len);
+//#ifdef ADAFRUIT_FONA_DEBUG
+//	DEBUG_PRINTLN(packet);
+//#endif
+//	DEBUG_PRINTLN();
+//
+//	mySerial->print(F("AT+CIPSEND="));
+//	mySerial->println(len);
+//	readline(5000, true);
+//	//	readRaw(b);
+//
+//	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+//
+//	DEBUG_PRINTLN(replybuffer[0]);
+//
+//	if (replybuffer[0] != '>') return false;
+//
+//	mySerial->print(packet);
+//	readline(3000); // wait up to 3 seconds to send the data
+//
+//	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
+//
+//	return (strcmp(replybuffer, "SEND OK") == 0);
+//}
 
 boolean Adafruit_FONA::TCPsendCharString(const char * packet) {
-
+	flushInput();
 	uint16_t len = strlen(packet);
 	DEBUG_PRINT(F("AT+CIPSEND="));
 	DEBUG_PRINTLN(len);
@@ -1478,7 +1483,8 @@ boolean Adafruit_FONA::TCPsendCharString(const char * packet) {
 
 	mySerial->print(F("AT+CIPSEND="));
 	mySerial->println(len);
-	readline(5000, true);
+	readline();
+//	readline(2000, true);
 	//	readRaw(b);
 
 	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
@@ -1488,7 +1494,7 @@ boolean Adafruit_FONA::TCPsendCharString(const char * packet) {
 	if (replybuffer[0] != '>') return false;
 
 	mySerial->print(packet);
-	readline(3000); // wait up to 3 seconds to send the data
+	readline(5000); // wait up to 5 seconds to send the data
 
 	DEBUG_PRINT (F("\t<--- ")); DEBUG_PRINTLN(replybuffer);
 
@@ -1930,6 +1936,13 @@ uint16_t Adafruit_FONA::readRaw(uint16_t b) {
 	replybuffer[idx] = 0;
 
 	return idx;
+}
+
+uint8_t Adafruit_FONA::readlines(char * buffer, uint16_t timeout) {
+
+	uint8_t read_size = this->readline(timeout, true);
+	strcpy(buffer, replybuffer);
+	return read_size;
 }
 
 uint8_t Adafruit_FONA::readline(uint16_t timeout, boolean multiline) {

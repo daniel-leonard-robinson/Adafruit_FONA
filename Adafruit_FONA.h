@@ -199,8 +199,10 @@ class Adafruit_FONA : public FONAStreamType {
   uint8_t getReplyDebug(const char *send, uint16_t timeout);
   uint8_t getReplyDebug(FONAFlashStringPtr send, uint16_t timeout);
 
+  uint8_t readlines(char * buffer, uint16_t timeout);
 
  protected:
+//  ~Adafruit_FONA(void);
   int8_t _rstpin;
   uint8_t _type;
 
@@ -264,6 +266,7 @@ class Adafruit_FONA_3G : public Adafruit_FONA {
     boolean enableGPS(boolean onoff);
 
  protected:
+    ~Adafruit_FONA_3G(void);
     boolean parseReply(FONAFlashStringPtr toreply,
 		       float *f, char divider, uint8_t index);
 
