@@ -21,8 +21,6 @@
 #include "includes/FONAExtIncludes.h"
 #include "includes/platform/FONAPlatform.h"
 
-
-
 #define FONA800L 1
 #define FONA800H 6
 
@@ -67,6 +65,7 @@
 class Adafruit_FONA : public FONAStreamType {
  public:
   Adafruit_FONA(int8_t r);
+  boolean beginEmpty(FONAStreamType &port);
   boolean begin(FONAStreamType &port);
   uint8_t type();
 
@@ -134,6 +133,7 @@ class Adafruit_FONA : public FONAStreamType {
   boolean getGSMLoc(uint16_t *replycode, char *buff, uint16_t maxlen);
   boolean getGSMLoc(float *lat, float *lon);
   void setGPRSNetworkSettings(FONAFlashStringPtr apn, FONAFlashStringPtr username=0, FONAFlashStringPtr password=0);
+  void setGPRSNetworkSettings(const char * apn, FONAFlashStringPtr username=0, FONAFlashStringPtr password=0);
 
   // GPS handling
   boolean enableGPS(boolean onoff);
@@ -147,8 +147,14 @@ class Adafruit_FONA : public FONAStreamType {
   boolean TCPclose(void);
   boolean TCPconnected(void);
   boolean TCPsend(char *packet, uint8_t len);
+  boolean TCPsendString(String packet);
+  boolean TCPsendCharString(const char * packet);
+  boolean TCPsendPackets(char packets[8][100], uint8_t packets_len);
+//  boolean TCPsend(String packet, uint8_t len);
   uint16_t TCPavailable(void);
   uint16_t TCPread(uint8_t *buff, uint8_t len);
+  uint16_t TCPreadString(String& buff, int len);
+  uint16_t TCPwaitReply();
 
   // HTTP low level interface (maps directly to SIM800 commands).
   boolean HTTP_init();
@@ -190,13 +196,19 @@ class Adafruit_FONA : public FONAStreamType {
   boolean sendCheckReply(FONAFlashStringPtr send, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(char* send, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
 
+  uint8_t getReplyDebug(const char *send, uint16_t timeout);
+  uint8_t getReplyDebug(FONAFlashStringPtr send, uint16_t timeout);
+
+  uint8_t readlines(char * buffer, uint16_t timeout);
 
  protected:
+//  ~Adafruit_FONA(void);
   int8_t _rstpin;
   uint8_t _type;
 
-  char replybuffer[255];
+  char replybuffer[300];
   FONAFlashStringPtr apn;
+  char apn_alt[64]; // alternative apn (not stored in flash but SRAM/(possibly eeprom))
   FONAFlashStringPtr apnusername;
   FONAFlashStringPtr apnpassword;
   boolean httpsredirect;
@@ -215,11 +227,13 @@ class Adafruit_FONA : public FONAStreamType {
   uint8_t getReply(FONAFlashStringPtr prefix, int32_t suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   uint8_t getReply(FONAFlashStringPtr prefix, int32_t suffix1, int32_t suffix2, uint16_t timeout); // Don't set default value or else function call is ambiguous.
   uint8_t getReplyQuoted(FONAFlashStringPtr prefix, FONAFlashStringPtr suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  uint8_t getReplyQuoted(const char * prefix, const char * suffix, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
 
   boolean sendCheckReply(FONAFlashStringPtr prefix, char *suffix, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(FONAFlashStringPtr prefix, int32_t suffix, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReply(FONAFlashStringPtr prefix, int32_t suffix, int32_t suffix2, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
   boolean sendCheckReplyQuoted(FONAFlashStringPtr prefix, FONAFlashStringPtr suffix, FONAFlashStringPtr reply, uint16_t timeout = FONA_DEFAULT_TIMEOUT_MS);
+  boolean sendCheckReplyQuoted(const char * prefix, const char * suffix, const char * reply, uint16_t timeout);
 
 
   boolean parseReply(FONAFlashStringPtr toreply,
@@ -252,6 +266,7 @@ class Adafruit_FONA_3G : public Adafruit_FONA {
     boolean enableGPS(boolean onoff);
 
  protected:
+    ~Adafruit_FONA_3G(void);
     boolean parseReply(FONAFlashStringPtr toreply,
 		       float *f, char divider, uint8_t index);
 

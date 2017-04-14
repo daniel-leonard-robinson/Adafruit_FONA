@@ -603,6 +603,7 @@ void loop() {
         Serial.println(replybuffer);
         Serial.println(F("*****"));
       }
+      break;
     }
 
     /*** Time ***/
