@@ -1601,7 +1601,8 @@ uint16_t Adafruit_FONA::TCPread(uint8_t *buff, uint8_t len) {
 	DEBUG_PRINTLN();
 #endif
 
-	memcpy(buff, replybuffer, avail);
+	replybuffer[avail] = 0;
+	memcpy(buff, replybuffer, avail + 1);
 
 	return avail;
 }
