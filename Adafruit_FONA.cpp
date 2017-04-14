@@ -1575,7 +1575,8 @@ uint16_t Adafruit_FONA::TCPavailable(void) {
 	if (! sendParseReply(F("AT+CIPRXGET=4"), F("+CIPRXGET: 4,"), &avail, ',', 0) ) return false;
 
 
-	DEBUG_PRINT (avail); DEBUG_PRINTLN(F(" bytes available"));
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINT (avail);
+	if (ADAFRUIT_CUSTOM_DEBUG) DEBUG_PRINTLN(F(" bytes available"));
 
 
 	return avail;
@@ -1605,7 +1606,7 @@ uint16_t Adafruit_FONA::TCPread(uint8_t *buff, uint8_t len) {
 	return avail;
 }
 
-uint16_t Adafruit_FONA::TCPreadString(String *buff, int len) {
+uint16_t Adafruit_FONA::TCPreadString(String& buff, int len) {
 	uint16_t avail;
 
 	mySerial->print(F("AT+CIPRXGET=2,"));
@@ -1622,9 +1623,9 @@ uint16_t Adafruit_FONA::TCPreadString(String *buff, int len) {
 
 	//	memcpy(buff, replybuffer, avail);
 	String str(replybuffer);
-	*buff = "";
-	(*buff).concat(str);
-	DEBUG_PRINTLN(*buff);
+	buff = "";
+	buff.concat(str);
+	DEBUG_PRINTLN(buff);
 
 	return avail;
 }
