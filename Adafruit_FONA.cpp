@@ -473,7 +473,7 @@ boolean Adafruit_FONA::setSMSInterrupt(uint8_t i) {
 	return sendCheckReply(F("AT+CFGRI="), i, ok_reply);
 }
 
-int8_t Adafruit_FONA::getNumSMS(void) {
+int16_t Adafruit_FONA::getNumSMS(void) {
 	uint16_t numsms;
 
 	// get into text mode
@@ -481,9 +481,9 @@ int8_t Adafruit_FONA::getNumSMS(void) {
 
 	// ask how many sms are stored
 	if (sendParseReply(F("AT+CPMS?"), F("\"SM\","), &numsms))
-		return numsms;
+		return (int16_t)numsms;
 	if (sendParseReply(F("AT+CPMS?"), F("\"SM_P\","), &numsms))
-		return numsms;
+		return (int16_t)numsms;
 	return -1;
 }
 
